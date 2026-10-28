@@ -1,0 +1,6 @@
+*.tgz
+charts/*/charts/
+charts/*/Chart.lock
+.env
+*.local.yaml
+load/results/
