@@ -1,0 +1,17 @@
+postgres:
+  image: postgres:18-alpine
+  storage: 2Gi
+  # One database per service, each owned by its own user. Passwords are generated once and kept in Secret postgres-credentials.
+  databases:
+    - { name: orderflow, user: orderflow }
+    - { name: orderflow_consumer, user: orderflow }
+    - { name: payledger, user: payledger }
+
+kafka:
+  image: apache/kafka:4.3.1
+  storage: 2Gi
+  heap: -Xms256m -Xmx512m
+  # PayLedger creates its own topics through AdminClient; OrderFlow expects them to exist.
+  topics:
+    - { name: orderflow.orders, partitions: 3 }
+    - { name: orderflow.orders.dlq, partitions: 1 }

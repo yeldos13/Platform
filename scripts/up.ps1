@@ -8,6 +8,10 @@ $exists = $LASTEXITCODE -eq 0
 $ErrorActionPreference = 'Stop'
 if (-not $exists) {
     k3d cluster create --config "$root/k3d.yaml" --wait
+} else {
+    k3d cluster start platform --wait  # no-op when already running
 }
 kubectl config use-context k3d-platform | Out-Null
 kubectl wait --for=condition=Ready node --all --timeout=120s
+
+helm upgrade --install infra "$root/charts/infra" -n platform --create-namespace --wait --timeout 5m

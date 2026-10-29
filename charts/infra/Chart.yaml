@@ -1,0 +1,4 @@
+apiVersion: v2
+name: infra
+description: PostgreSQL and Kafka (KRaft) for OrderFlow and PayLedger
+version: 0.1.0
