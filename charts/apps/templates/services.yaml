@@ -1,0 +1,77 @@
+{{- range $name, $svc := .Values.services }}
+{{- $env := list }}
+{{- if $svc.dbPasswordKey }}
+{{- $env = append $env (dict "name" "DB_PASSWORD" "valueFrom" (dict "secretKeyRef" (dict "name" "postgres-credentials" "key" $svc.dbPasswordKey))) }}
+{{- end }}
+{{- range $k, $v := $svc.env }}
+{{- $env = append $env (dict "name" $k "value" (toString $v)) }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels: { app: {{ $name }} }
+spec:
+  replicas: {{ $svc.replicas | default $.Values.defaults.replicas }}
+  selector:
+    matchLabels: { app: {{ $name }} }
+  template:
+    metadata:
+      labels: { app: {{ $name }} }
+      annotations:
+        restartedAt: {{ $.Values.podRestart | default "" | quote }}
+    spec:
+      enableServiceLinks: false
+      {{- if $svc.migrationsImage }}
+      initContainers:
+        - name: migrations
+          image: {{ $svc.migrationsImage }}
+          imagePullPolicy: Never
+          env: {{- toYaml $env | nindent 12 }}
+      {{- end }}
+      containers:
+        - name: app
+          image: {{ $svc.image }}
+          imagePullPolicy: Never
+          env: {{- toYaml $env | nindent 12 }}
+          ports:
+            - { name: http, containerPort: 8080 }
+          startupProbe:
+            httpGet: { path: {{ $svc.probes.live }}, port: http }
+            periodSeconds: 3
+            failureThreshold: 40
+          livenessProbe:
+            httpGet: { path: {{ $svc.probes.live }}, port: http }
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: { path: {{ $svc.probes.ready }}, port: http }
+            periodSeconds: 5
+          resources: {{- toYaml (mergeOverwrite (deepCopy $.Values.defaults.resources) ($svc.resources | default dict)) | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels: { app: {{ $name }} }
+spec:
+  selector: { app: {{ $name }} }
+  ports:
+    - { name: http, port: 8080, targetPort: http }
+{{- if $svc.ingressHost }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $name }}
+spec:
+  rules:
+    - host: {{ $svc.ingressHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: {{ $name }}, port: { name: http } }
+{{- end }}
+{{- end }}
