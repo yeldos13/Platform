@@ -1,0 +1,47 @@
+# Lean local setup: Prometheus + Grafana (+ operator, kube-state-metrics); no Alertmanager/node-exporter.
+alertmanager: { enabled: false }
+nodeExporter: { enabled: false }
+prometheus-node-exporter: { enabled: false }
+defaultRules: { create: false }
+kubeControllerManager: { enabled: false }
+kubeScheduler: { enabled: false }
+kubeProxy: { enabled: false }
+kubeEtcd: { enabled: false }
+
+prometheus:
+  prometheusSpec:
+    # Pick up ServiceMonitors from every namespace and release, not only this chart's.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    scrapeInterval: 15s
+    retention: 2d
+    enableFeatures: [exemplar-storage]
+    resources:
+      requests: { cpu: 100m, memory: 400Mi }
+      limits: { memory: 1Gi }
+
+grafana:
+  # shortcut: anonymous Admin, fine for a local cluster only; use real auth anywhere shared.
+  grafana.ini:
+    auth.anonymous: { enabled: true, org_role: Admin }
+    auth: { disable_login_form: true }
+  ingress:
+    enabled: true
+    hosts: [grafana.localhost]
+  sidecar:
+    dashboards:
+      enabled: true
+      searchNamespace: ALL
+      label: grafana_dashboard
+  additionalDataSources:
+    - name: Tempo
+      uid: tempo
+      type: tempo
+      url: http://tempo.monitoring:3200
+      jsonData:
+        serviceMap: { datasourceUid: prometheus }
+        tracesToMetrics: { datasourceUid: prometheus }
+        nodeGraph: { enabled: true }
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { memory: 384Mi }

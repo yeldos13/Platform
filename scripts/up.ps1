@@ -36,8 +36,15 @@ if (-not $SkipBuild) {
     Run k3d image import -c platform @tags
 }
 
+Run helm repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
+Run helm repo add grafana https://grafana.github.io/helm-charts --force-update
+$m = "$root/monitoring"
+Run helm upgrade --install kps prometheus-community/kube-prometheus-stack --version 92.16.1 -n monitoring --create-namespace -f "$m/kube-prometheus-stack.yaml" --wait --timeout 10m
+Run helm upgrade --install tempo grafana/tempo --version 1.24.4 -n monitoring -f "$m/tempo.yaml" --wait
+Run helm upgrade --install kafka-exporter prometheus-community/prometheus-kafka-exporter --version 4.1.1 -n monitoring -f "$m/kafka-exporter.yaml"
+
 Run helm upgrade --install infra "$root/charts/infra" -n platform --create-namespace --wait --timeout 5m
 # Restart pods so freshly imported :dev images are picked up.
 Run helm upgrade --install apps "$root/charts/apps" -n platform --wait --timeout 5m --set-string "podRestart=$(Get-Date -Format o)"
 
-Write-Host "`nOrderFlow API: http://orderflow.localhost:8088/scalar   PayLedger: http://payledger.localhost:8088/swagger-ui.html"
+Write-Host "`nOrderFlow API: http://orderflow.localhost:8088/scalar   PayLedger: http://payledger.localhost:8088/swagger-ui.html   Grafana: http://grafana.localhost:8088"

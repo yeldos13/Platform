@@ -7,6 +7,7 @@ services:
     migrationsImage: orderflow-api-migrations:dev
     dbPasswordKey: orderflow-password
     ingressHost: orderflow.localhost
+    metricsPath: /metrics
     probes: { live: /health/live, ready: /health/ready }
     env:
       ASPNETCORE_ENVIRONMENT: Production
@@ -17,6 +18,7 @@ services:
   orderflow-consumer:
     image: orderflow-consumer:dev
     migrationsImage: orderflow-consumer-migrations:dev
+    metricsPath: /metrics
     dbPasswordKey: orderflow-password
     probes: { live: /health/live, ready: /health/ready }
     env:
@@ -35,6 +37,7 @@ services:
     image: payledger:dev
     dbPasswordKey: payledger-password
     ingressHost: payledger.localhost
+    metricsPath: /actuator/prometheus
     probes: { live: /actuator/health/liveness, ready: /actuator/health/readiness }
     resources:
       limits: { memory: 768Mi }

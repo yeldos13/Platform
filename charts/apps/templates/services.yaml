@@ -75,3 +75,19 @@ spec:
               service: { name: {{ $name }}, port: { name: http } }
 {{- end }}
 {{- end }}
+{{- range $name, $svc := .Values.services }}
+{{- if $svc.metricsPath }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ $name }}
+spec:
+  selector:
+    matchLabels: { app: {{ $name }} }
+  endpoints:
+    - port: http
+      path: {{ $svc.metricsPath }}
+      interval: 15s
+{{- end }}
+{{- end }}

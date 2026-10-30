@@ -1,0 +1,6 @@
+kafkaServer: [kafka.platform:9092]
+prometheus:
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    interval: 15s
