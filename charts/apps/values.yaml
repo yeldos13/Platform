@@ -13,6 +13,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__OrderFlow: Host=postgres;Database=orderflow;Username=orderflow;Password=$(DB_PASSWORD);GSS Encryption Mode=Disable
       Kafka__BootstrapServers: kafka:9092
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo.monitoring:4317
       OpenApi__Enabled: "true"
 
   orderflow-consumer:
@@ -25,6 +26,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__ConsumerDb: Host=postgres;Database=orderflow_consumer;Username=orderflow;Password=$(DB_PASSWORD);GSS Encryption Mode=Disable
       Kafka__BootstrapServers: kafka:9092
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo.monitoring:4317
       Warehouse__BaseUrl: http://orderflow-warehouse:8080/
 
   orderflow-warehouse:
