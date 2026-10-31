@@ -47,6 +47,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payledger
       SPRING_DATASOURCE_PASSWORD: $(DB_PASSWORD)
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://tempo.monitoring:4318/v1/traces
 
 defaults:
   replicas: 1
